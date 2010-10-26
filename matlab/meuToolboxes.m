@@ -19,4 +19,5 @@ importLatest('lle');
 importLatest('mvu');
 importLatest('sedumi');
 importLatest('voicebox');
+importTool('matfig2pgf');
 importLatest('L1precision');
