@@ -34,7 +34,7 @@ else
 end
 fprintf('Scoring model.\n');
 model.score = lvmScoreModel(model);
-fprintf('Model score %2.4f/n', model.score);
+fprintf('Model score %2.4f\n', model.score);
 
 % Save the results.
 modelWriteResult(model, dataSetName, experimentNo);

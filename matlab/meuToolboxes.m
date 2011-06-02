@@ -9,7 +9,7 @@ importLatest('optimi');
 importLatest('mocap');
 importLatest('prior');
 importLatest('datasets');
-importLatest('mltools');
+importTool('mltools');
 %importLatest('synth');
 %importLatest('plot2svg');
 %importLatest('rotate_image');
