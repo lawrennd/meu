@@ -19,3 +19,10 @@ model.gamma = 1e-4;
 model.traceY = sum(sum(model.Y.*model.Y));
 params = meuExtractParam(model);
 model = meuExpandParam(model, params);
+if model.reduceRank
+  model = spectralUpdateX(model);
+  model.X = ppcaEmbed(model.Y, model.q);
+end
+if model.gammaOptimize
+  model.gamma = exp(1);
+end

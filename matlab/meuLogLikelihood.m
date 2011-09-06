@@ -8,16 +8,17 @@ function ll = meuLogLikelihood(model)
 %
 % SEEALSO : meuCreate, meuLogLikeGradients, modelLogLikelihood
 %
-% COPYRIGHT : Neil D. Lawrence 2009
+% COPYRIGHT : Neil D. Lawrence, 2009, 2011
  
 % MEU
 
   if model.sigma2 == 0
     ll = -model.d*model.logDetK;
-    ll = ll - sum(sum(model.Y.*((model.L*model.Y)+model.gamma*model.Y)));
+    ll = ll - sum(sum(model.Y.*((model.Kinv*model.Y))));
 
   else
     ll = -model.d*model.logDetSigma;
     ll = ll - sum(sum(model.Y.*(model.invSigma*model.Y)));
   end
   ll = ll*0.5;
+end

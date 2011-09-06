@@ -41,7 +41,7 @@ options(14) = iters;
 if isfield(model, 'optimiser')
   optim = str2func(model.optimiser);
 else
-  optim = str2func('conjgrad');
+  optim = str2func('scg');
 end
 
 if strcmp(func2str(optim), 'optimiMinimize')
@@ -56,17 +56,18 @@ end
 model = meuExpandParam(model, params);
 
 %[U, V] = eigs(model.L, model.q+1, 'sm');
-if model.sigma2>0
-  [U, V] = eig(centeringMatrix(model.N)*model.Sigma*centeringMatrix(model.N));
-else
-  [U, V] = eig(centeringMatrix(model.N)*model.K*centeringMatrix(model.N));
+if ~model.Xoptimize % Set X
+  if model.sigma2>0
+    [U, V] = eig(centeringMatrix(model.N)*model.Sigma*centeringMatrix(model.N));
+  else
+    [U, V] = eig(centeringMatrix(model.N)*model.K*centeringMatrix(model.N));
+  end
+  v = diag(V);
+  [v, order] = sort(v);
+  ind = order(end:-1:end-model.q+1);
+  model.X = U(:, ind);
+  meanX = mean(model.X);
+  model.X = model.X-ones(model.N, 1)*meanX;
+  varX = var(model.X);
+  model.X = model.X*diag(sqrt(1./varX));
 end
-v = diag(V);
-[v, order] = sort(v);
-ind = order(end:-1:end-model.q+1);
-model.X = U(:, ind);
-meanX = mean(model.X);
-model.X = model.X-ones(model.N, 1)*meanX;
-varX = var(model.X);
-model.X = model.X*diag(sqrt(1./varX));
-

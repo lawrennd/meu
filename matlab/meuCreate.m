@@ -33,4 +33,11 @@ model.sigma2 = options.sigma2;
 model.sigma2Fixed = true;
 model.kappaTransform = optimiDefaultConstraint('positive');
 model.sigma2Transform = optimiDefaultConstraint('positive');
+model.gammaTransform = optimiDefaultConstraint('positive');
+model.reduceRank = options.reduceRank;
+model.Xoptimize = options.Xoptimize;
+model.gammaOptimize = options.gammaOptimize;
+if options.reduceRank
+  model.X = zeros(model.N, model.q);
+end
 model = meuParamInit(model);

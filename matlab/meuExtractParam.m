@@ -19,7 +19,7 @@ function [params, names] = meuExtractParam(model)
 %
 % SEEALSO meuCreate, meuExpandParam, modelExtractParam, scg, conjgrad
 %
-% COPYRIGHT : Neil D. Lawrence 2009
+% COPYRIGHT : Neil D. Lawrence 2009, 2011
 %
 % MEU
 
@@ -28,17 +28,36 @@ function [params, names] = meuExtractParam(model)
   fhandle = str2func([model.kappaTransform 'Transform']);
   params = fhandle(params, 'xtoa');
 
+  if model.Xoptimize
+    params = [params model.X(:)'];
+  end
+  if model.gammaOptimize
+    fhandle = str2func([model.gammaTransform 'Transform']);
+    params = [params fhandle(model.gamma, 'xtoa')];
+  end
   if ~model.sigma2Fixed
     fhandle = str2func([model.sigma2Transform 'Transform']);
-    params(end+1) = fhandle(model.sigma2, 'xtoa');
+    params = [params fhandle(model.sigma2, 'xtoa')];
   end
   if nargout>1
     counter = 0;
     for j = 1:size(model.kappa, 2)
       for i = 1:size(model.kappa, 1)
         counter = counter + 1;
-        names{counter} = ['Spring ' num2str(i) ' to ' num2str(model.indices(i, j))] ;
+        names{counter} = ['Connection ' num2str(i) ' to ' num2str(model.indices(i, j))] ;
       end
+    end
+    if model.reduceRank && model.Xoptimize
+      for i = 1:model.N
+        for j = 1:model.q
+          counter = counter + 1;
+          names{counter} = ['X(' num2str(i) ', ' num2str(j) ')'];
+        end
+      end
+    end
+    if model.gammaOptimize
+      counter = counter + 1;
+      names{counter} = 'Gamma';
     end
     if model.sigma2>0
       names{counter+1} = 'Noise variance';

@@ -15,29 +15,53 @@ function model = meuExpandParam(model, params)
 %
 % SEEALSO : meuCreate, meuExtractParam, modelExpandParam
 %
-% COPYRIGHT : Neil D. Lawrence 2009
+% COPYRIGHT : Neil D. Lawrence, 2009, 2011
 
 % MEU
 
   fhandle = str2func([model.kappaTransform 'Transform']);
-  params(1:model.N*model.k) = fhandle(params(1:model.N*model.k), 'atox');
-  model.kappa = reshape(params(1:model.N*model.k), model.N, model.k);
+  endVal = 0;
+  startVal = endVal+1;
+  endVal = endVal+model.N*model.k;
+  params(startVal:endVal) = fhandle(params(1:model.N*model.k), 'atox');
+  model.kappa = reshape(params(startVal:endVal), model.N, model.k);
   model = spectralUpdateLaplacian(model);
-  Kinv = model.L + model.gamma*eye(model.N);
+ 
+  if model.reduceRank && model.Xoptimize
+    startVal = endVal+1;
+    endVal = endVal + model.N*model.q;
+    model.X = reshape(params(startVal:endVal), model.N, model.q);
+  end
+  if model.gammaOptimize
+    startVal = endVal+1;
+    endVal = endVal + 1;
+    fhandle = str2func([model.gammaTransform 'Transform']);
+    model.gamma = fhandle(params(startVal:endVal), 'atox');
+  end
+  % Create Kinv
+  model.Cinv = eye(model.N)*model.gamma;
+  if model.reduceRank && model.Xoptimize
+    model.Cinv = model.Cinv ...
+           - model.gamma*model.X*pdinv(model.X'*model.X ...
+                                       + 1/model.gamma*eye(model.q))*model.X';
+  end
+  model.Kinv = model.Cinv + model.L;
   if model.sigma2>0
     if ~model.sigma2Fixed
       fhandle = str2func([model.sigma2Transform 'Transform']);
-      model.sigma2 = fhandle(params(end), 'atox');
+      startVal = endVal+1;
+      endVal = endVal+1;
+      model.sigma2 = fhandle(params(startVal:endVal), 'atox');
     end
-    model.Sigma = pdinv(Kinv) + model.sigma2*eye(model.N);
+    model.Sigma = pdinv(model.Kinv) + model.sigma2*eye(model.N);
     [model.invSigma, U] = pdinv(model.Sigma);
     model.logDetSigma = logdet(model.Sigma, U);
-    A = speye(model.N) + model.sigma2*Kinv;
+    A = speye(model.N) + model.sigma2*model.Kinv;
     model.Ainv = pdinv(A);
-    model.AinvLinv = pdinv(A*Kinv);
+    model.AinvLinv = pdinv(A*model.Kinv);
   else
-    [model.K, U] = pdinv(full(Kinv));
-    model.logDetK = - logdet(Kinv, U);
+    [model.K, U] = pdinv(full(model.Kinv));
+    model.logDetK = - logdet(model.Kinv, U);
   end
   if ~model.sigma2>0
     model.expD2 = zeros(model.N, model.k);
